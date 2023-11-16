@@ -2,17 +2,17 @@ package main
 
 import (
 	// "fmt"
-
 	"httpserver/controller/stdhttp"
 	"httpserver/gates/psg"
+	"os"
 	// "httpserver/models/dto"
 	// "httpserver/pkg"
 )
 
 func main() {
-	psgr := psg.NewPsg("localhost")
+	psgr := psg.NewPsg("localhost", os.Getenv("DB_PASSWORD"))
+	defer psgr.Close()
 	serv := stdhttp.NewController(":8080", psgr)
-
 	serv.Start()
 	// fmt.Println("All ride")
 
@@ -62,5 +62,8 @@ func main() {
 	// // p := psg.NewPsg()
 	// // hs := httpserver.NewHttpServer(":8080")
 	// // hs.Start()
-	// // fmt.Println(pkg.PhoneNormalize("8(985)-46-52-19"))
+	// // fmt.Println(pkg.PhoneNormalize("8(985)-846-52-19"))
+	// fmt.Println(pkg.PhoneNormalize(""))
+	// fmt.Println(pkg.ErrorGenerate("test error"))
+
 }
