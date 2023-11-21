@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"runtime"
-
+	"strings"
 	"github.com/pkg/errors"
 )
 
@@ -22,10 +22,19 @@ func ErrorGenerate(text string) error {
 }
 
 type Errorer struct {
-	where string
-	what string
+	Where string
+	Funct string
 }
 
-func (er *Errorer) Regist(error_place string) {
-	er.where = error_place
+func (er *Errorer) Add(error_place string) {
+	er.Where = strings.Join([]string{er.Where, error_place}, ": ")
+}
+
+func (er *Errorer) RegFunct(error_base string) {
+	er.Funct = error_base
+}
+
+func (er *Errorer) GetError() string{
+	result := er.Funct + er.Where
+	return result
 }

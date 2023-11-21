@@ -11,7 +11,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 )
 
 type Controller struct {
@@ -39,77 +38,61 @@ func NewController(addr string, postgres *psg.Psg) (hs *Controller) {
 	return hs
 }
 
-func (hs *Controller) Start() (err error) {
-	err = hs.srv.ListenAndServe()
+func (hs *Controller) Start() *pkg.Errorer {
+	errorer := &pkg.Errorer{Where: "stdhttp: func (hs *Controller) Start()"}
+	err := hs.srv.ListenAndServe()
 	if err != nil {
-		err = errors.Wrap(err, "hs.Start(): hs.srv.ListenAndServe()")
-		return err
+		errorer.Add("hs.srv.ListenAndServe(): " + err.Error())
+		return errorer
 	}
-	return err
+	return nil
 }
 
 // RecordCreate обрабатывает HTTP запрос для добавления новой записи.
 func (hs *Controller) RecordCreateHandler(w http.ResponseWriter, req *http.Request) {
-	record := dto.Record{}
-	byteReq, err := io.ReadAll(req.Body)
-	req.Body.Close()
-	log.Printf("Request Body: %s", string(byteReq))
-	if err != nil {
-		// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): io.ReadAll(req.Body)")
-		log.Println(err)
+	errorer := &pkg.Errorer{Where: "stdhttp: func (hs *Controller) RecordCreateHandler(w http.ResponseWriter, req *http.Request)"}
+	record, erro := GetBody(req)
+	if erro != nil {
+		errorer.Add("GetBody(req): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
-	err = json.Unmarshal(byteReq, &record)
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): json.Unmarshal(byteReq, &record)"+string(byteReq))
-		log.Println(err)
+	record.Phone, erro = pkg.PhoneNormalize(record.Phone)
+	if erro != nil {
+		errorer.Add("pkg.PhoneNormalize(record.Phone): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
-	record.Phone, err = pkg.PhoneNormalize(record.Phone)
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): pkg.PhoneNormalize(record.Phone)")
-		log.Println(err)
-		return
-	}
-	err = hs.db.RecordCreate(record)
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): hs.db.RecordCreate(record)")
-		log.Println(err)
+	erro = hs.db.RecordCreate(*record)
+	if erro != nil {
+		errorer.Add("hs.db.RecordCreate(record): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
 }
 
 // RecordsGet обрабатывает HTTP запрос для получения записей на основе предоставленных полей Record.
 func (hs *Controller) RecordGetHandler(w http.ResponseWriter, req *http.Request) {
-	record := dto.Record{}
-	byteReq, err := io.ReadAll(req.Body)
-	req.Body.Close()
-	log.Printf("Request Body: %s", string(byteReq))
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): io.ReadAll(req.Body)")
-		log.Println(err)
-		return
-	}
-	err = json.Unmarshal(byteReq, &record)
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): json.Unmarshal(byteReq, &record)")
-		log.Println(err)
+	errorer := &pkg.Errorer{Where: "stdhttp: func (hs *Controller) RecordGetHandler(w http.ResponseWriter, req *http.Request)"}
+	record, erro := GetBody(req)
+	if erro != nil {
+		errorer.Add("GetBody(req): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
 	if record.Phone != "" {
-		record.Phone, err = pkg.PhoneNormalize(record.Phone)
-		if err != nil {
-			err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): pkg.PhoneNormalize(record.Phone)")
-			log.Println(err)
+		record.Phone, erro = pkg.PhoneNormalize(record.Phone)
+		if erro != nil {
+			errorer.Add("pkg.PhoneNormalize(record.Phone): " + erro.GetError())
+			log.Println(errorer.GetError())
 			return
 		}
 	}
 
-	result, err := hs.db.RecordsGet(record)
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): hs.db.RecordsGet(record)")
-		log.Println(err)
+	result, erro := hs.db.RecordsGet(*record)
+	if erro != nil {
+		errorer.Add("hs.db.RecordsGet(*record): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
 	fmt.Println(result) /// По хорошему вернуть бы эти данные
@@ -117,55 +100,67 @@ func (hs *Controller) RecordGetHandler(w http.ResponseWriter, req *http.Request)
 
 // RecordUpdate обрабатывает HTTP запрос для обновления записи.
 func (hs *Controller) RecordUpdateHandler(w http.ResponseWriter, req *http.Request) {
-	record := dto.Record{}
-	byteReq, err := io.ReadAll(req.Body)
-	req.Body.Close()
-	log.Printf("Request Body: %s", string(byteReq))
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): io.ReadAll(req.Body)")
-		log.Println(err)
+	errorer := &pkg.Errorer{Where: "stdhttp: func (hs *Controller) RecordUpdateHandler(w http.ResponseWriter, req *http.Request)"}
+	record, erro := GetBody(req)
+	if erro != nil {
+		errorer.Add("GetBody(req): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
-	err = json.Unmarshal(byteReq, &record)
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): json.Unmarshal(byteReq, &record)")
-		log.Println(err)
+	record.Phone, erro = pkg.PhoneNormalize(record.Phone)
+	if erro != nil {
+		errorer.Add("pkg.PhoneNormalize(record.Phone): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
-	record.Phone, err = pkg.PhoneNormalize(record.Phone)
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): pkg.PhoneNormalize(record.Phone)")
-		log.Println(err)
-		return
-	}
-	err = hs.db.RecordUpdate(record)
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): hs.db.RecordUpdate(record)")
-		log.Println(err)
+	erro = hs.db.RecordUpdate(*record)
+	if erro != nil {
+		errorer.Add("hs.db.RecordUpdate(*record): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
 }
 
 // RecordDeleteByPhone обрабатывает HTTP запрос для удаления записи по номеру телефона.
 func (hs *Controller) RecordDeleteByPhoneHandler(w http.ResponseWriter, req *http.Request) {
+	errorer := &pkg.Errorer{Where: "stdhttp: func (hs *Controller) RecordDeleteByPhoneHandler(w http.ResponseWriter, req *http.Request)"}
 	byteReq, err := io.ReadAll(req.Body)
 	req.Body.Close()
-	log.Printf("Request Body: %s", string(byteReq))
+	// log.Printf("Request Body: %s", string(byteReq))
 	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): io.ReadAll(req.Body)")
-		log.Println(err)
+		errorer.Add("io.ReadAll(req.Body): " + err.Error())
+		log.Println(errorer.GetError())
 		return
 	}
-	phone, err := pkg.PhoneNormalize(string(byteReq))
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): pkg.PhoneNormalize(record.Phone)")
-		log.Println(err)
+	phone, erro := pkg.PhoneNormalize(string(byteReq))
+	if erro != nil {
+		errorer.Add("pkg.PhoneNormalize(string(byteReq)): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
-	err = hs.db.RecordDeleteByPhone(phone)
-	if err != nil {
-		err = errors.Wrap(err, "Controller: (hs *controller) RecordCreateHandler(): hs.db.RecordDeleteByPhone(record)")
-		log.Println(err)
+	erro = hs.db.RecordDeleteByPhone(phone)
+	if erro != nil {
+		errorer.Add("hs.db.RecordDeleteByPhone(phone): " + erro.GetError())
+		log.Println(errorer.GetError())
 		return
 	}
+}
+
+func GetBody(req *http.Request) (record *dto.Record, errorer *pkg.Errorer) {
+	errorer = &pkg.Errorer{Where: "stdhttp: func GetBody(req *http.Request)"}
+	byteReq, err := io.ReadAll(req.Body)
+	req.Body.Close()
+	// log.Printf("Request Body: %s", string(byteReq))
+	if err != nil {
+		errorer.Add("io.ReadAll(req.Body): " + err.Error())
+		log.Println(errorer.GetError())
+		return nil, errorer
+	}
+	err = json.Unmarshal(byteReq, &record)
+	if err != nil {
+		errorer.Add("json.Unmarshal(byteReq, &record): " + err.Error())
+		log.Println(errorer.GetError())
+		return nil, errorer
+	}
+	return record, nil
 }

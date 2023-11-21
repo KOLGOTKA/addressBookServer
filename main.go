@@ -12,8 +12,10 @@ import (
 func main() {
 	psgr := psg.NewPsg("localhost", os.Getenv("DB_PASSWORD"))
 	defer psgr.Close()
+	// print(psgr.CheckPhone("+1234567890"))
 	serv := stdhttp.NewController(":8080", psgr)
 	serv.Start()
+
 	// fmt.Println("All ride")
 
 	// rec := dto.Record{
@@ -28,14 +30,14 @@ func main() {
 	// 	LastName:   "Сергеевич",
 	// 	MiddleName: "Кашпо",
 	// 	Address:    "Улица Смородиновая, дом 23",
-	// 	Phone:      "+79133840018",
+	// 	Phone:      "++79133840018",
 	// }
 	// rec2 := dto.Record{
-	// 	Name:       "Иван",
+	// 	Name:       "Кошмар",
 	// 	LastName:   "Романов",
-	// 	MiddleName: "Георгиевич",
-	// 	Address:    "Улица Пушкина, дом 1",
-	// 	Phone:      "+1234567890",
+	// 	MiddleName: "",
+	// 	Address:    "",
+	// 	Phone:      "++79133840018",
 	// }
 	// search_rec := dto.Record{
 	// 	Name:       "Иван",
@@ -45,15 +47,15 @@ func main() {
 	// 	Phone:      "",
 	// }
 	// _, err := psgr.RecordCreate(rec)
-	// _, err = psgr.RecordCreate(rec1)
+	// err := psgr.RecordCreate(rec1)
 	// _, err = psgr.RecordCreate(rec2)
-	// // fmt.Println("Created", err)
+	// fmt.Println("Created", err)
 	// query, err := psgr.RecordsGet(search_rec)
 	// fmt.Println("Searched", err, query)
 
 	// // print(psgr)
-	// // err := psgr.RecordUpdate(rec2)
-	// // fmt.Println("Updated", err)
+	// err = psgr.RecordUpdate(rec2)
+	// fmt.Println("Updated", err)
 
 	// err = psgr.RecordDeleteByPhone("+79133840018")
 	// fmt.Println("Deleted", err)

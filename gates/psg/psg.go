@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"httpserver/models/dto"
+	"httpserver/pkg"
 	"log"
 	"net/url"
 	"strconv"
@@ -20,7 +21,7 @@ func NewPsg(psgAddr string, dbPassword string) *Psg {
 	psg := &Psg{}
 
 	if dbPassword == "" {
-		fmt.Println("Error: no password")
+		fmt.Println("Error: no password") ////////////////////////// 1
 		return nil
 	}
 	db_url := &url.URL{
@@ -32,47 +33,39 @@ func NewPsg(psgAddr string, dbPassword string) *Psg {
 	connPool, err := pgxpool.New(context.Background(), db_url.String())
 
 	/// Так?
-
-	/// "postgresql://postgres:"+dbPassword+"@"+psgAddr+":5432/records")
-	/// через библиотеку url
 	if err != nil {
-		log.Fatal(err, "Something going wrong with connecting to database")
+		log.Fatal(err, "Something going wrong with connecting to database") /////////////////////// 2
 	}
 	psg.conn = connPool
-	// createTableSQL := `
-	// CREATE TABLE IF NOT EXISTS records (
-	// 	id SERIAL PRIMARY KEY,
-	// 	name VARCHAR(30),
-	// 	last_name VARCHAR(30),
-	// 	middle_name VARCHAR(30),
-	// 	address VARCHAR(255),
-	// 	phone VARCHAR(20)
-	// )
-	// ` ///такого создания таблиц не должно быть. Сделать через библиотеку
-	// _, err = psg.conn.Exec(context.Background(), createTableSQL)
-	/// А что не так? Как иначе. Все под капотом используют psg.conn.Exec.
-
-	// if err != nil {
-	// 	log.Fatal(err, "Something going wrong with table creating")
-	// }
-	// defer psg.conn.Close() Не забыть закрыть соединение
 	return psg
 }
 
 // RecordCreate добавляет новую запись в базу данных.
-func (p *Psg) RecordCreate(record dto.Record) error { /// убрать int64 в возвращанемом
+func (p *Psg) RecordCreate(record dto.Record) *pkg.Errorer {
+	errorer := &pkg.Errorer{Where: "psg: func (p *Psg) RecordCreate(record dto.Record)"}
+	record_existence, erro := p.CheckPhone(record.Phone)
+	if erro != nil {
+		errorer.Add(erro.GetError())
+		return errorer
+	}
+	if record_existence {
+		errorer.Add("Phone already exist")
+		return errorer
+	}
 	_, err := p.conn.Exec(context.Background(), "INSERT INTO records (name, last_name, middle_name, address, phone) VALUES ($1, $2, $3, $4, $5)",
 		record.Name, record.LastName, record.MiddleName, record.Address, record.Phone)
 
 	if err != nil {
-		return err
+		errorer.Add("p.conn.Exec(context.Background(), 'INSERT INTO records (name, last_name, middle_name, address, phone) VALUES ($1, $2, $3, $4, $5)', record.Name, record.LastName, record.MiddleName, record.Address, record.Phone): " + "Something going wrong with inserting into table 'records': " + err.Error())
+		return errorer
 	}
 
 	return nil
 }
 
 // RecordsGet возвращает записи из базы данных на основе предоставленных полей Record.
-func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, error) {
+func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, *pkg.Errorer) {
+	errorer := &pkg.Errorer{Where: "psg: func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, *pkg.Errorer)"}
 	var result []dto.Record
 
 	var values []interface{}
@@ -106,16 +99,15 @@ func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, error) {
 	fmt.Println(query, values) ///////////////////////////////////////
 
 	if err != nil {
-		log.Fatal(err)
-		return nil, err
+		errorer.Add("p.conn.Query(context.Background(), query, values...): Something going wrong with query to database")
+		return nil, errorer
 	}
 	defer rows.Close()
-	fmt.Println("there") /////////////////////////
 	for rows.Next() {
 		var rec dto.Record
 		if err := rows.Scan(&rec.ID, &rec.Name, &rec.LastName, &rec.MiddleName, &rec.Address, &rec.Phone); err != nil {
-			log.Println(err)
-			return nil, err
+			errorer.Add("rows.Scan(&rec.ID, &rec.Name, &rec.LastName, &rec.MiddleName, &rec.Address, &rec.Phone): Something going wrong scan")
+			return nil, errorer
 		}
 		result = append(result, rec)
 		fmt.Printf("ID: %d, Name: %s, Last Name: %s, Middle Name: %s, Address: %s, Phone: %s\n", rec.ID, rec.Name, rec.LastName, rec.MiddleName, rec.Address, rec.Phone)
@@ -124,27 +116,83 @@ func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, error) {
 }
 
 // RecordUpdate обновляет существующую запись в базе данных по номеру телефона.
-func (p *Psg) RecordUpdate(record dto.Record) error {
+func (p *Psg) RecordUpdate(record dto.Record) *pkg.Errorer {
+	errorer := &pkg.Errorer{Where: "psg: func (p *Psg) RecordUpdate(record dto.Record)"}
 	/// должны обновляться не все поля, а только те, которые передаём
-	query := "UPDATE records SET name=$1, last_name=$2, middle_name=$3, address=$4 WHERE phone=$5"
-	_, err := p.conn.Exec(context.Background(), query, record.Name, record.LastName, record.MiddleName, record.Address, record.Phone)
-	if err != nil {
-		log.Fatal(err)
+	var values []interface{}
+	query := "UPDATE records SET"
+	// Будем добавлять параметры в запрос только если они не пустые
+	if record.Name != "" {
+		query += " name=$" + strconv.Itoa(len(values)+1)
+		values = append(values, record.Name)
 	}
-	return err
+	if record.LastName != "" {
+		if len(values) > 0 {
+			query += ","
+		}
+		query += " last_name=$" + strconv.Itoa(len(values)+1)
+		values = append(values, record.LastName)
+	}
+	if record.MiddleName != "" {
+		if len(values) > 0 {
+			query += ","
+		}
+		query += " middle_name=$" + strconv.Itoa(len(values)+1)
+		values = append(values, record.MiddleName)
+	}
+	if record.Address != "" {
+		if len(values) > 0 {
+			query += ","
+		}
+		query += " address=$" + strconv.Itoa(len(values)+1)
+		values = append(values, record.Address)
+	}
+	if record.Phone == "" {
+		errorer.Add("Empty phone number")
+		return errorer
+	}
+	if len(values) == 0 {
+		errorer.Add("Nothing to update")
+		return errorer
+	}
+	query += " WHERE phone=$" + strconv.Itoa(len(values)+1)
+	values = append(values, record.Phone)
+	// query := "UPDATE records SET name=$1, last_name=$2, middle_name=$3, address=$4 WHERE phone=$5"
+	// _, err := p.conn.Exec(context.Background(), query, record.Name, record.LastName, record.MiddleName, record.Address, record.Phone)
+	_, err := p.conn.Exec(context.Background(), query, values...)
+	if err != nil {
+		errorer.Add("p.conn.Exec(context.Background(), query, values...): Something going wrong with query to database")
+		return errorer
+	}
+	return nil
 }
 
 // RecordDeleteByPhone удаляет запись из базы данных по номеру телефона.
-func (p *Psg) RecordDeleteByPhone(phone string) error {
+func (p *Psg) RecordDeleteByPhone(phone string) *pkg.Errorer {
+	errorer := &pkg.Errorer{Where: "psg: func (p *Psg) RecordDeleteByPhone(phone string)"}
 	query := "DELETE FROM records WHERE phone=$1"
 	_, err := p.conn.Exec(context.Background(), query, phone)
 	if err != nil {
-		log.Fatal(err)
+		errorer.Add("p.conn.Exec(context.Background(), query, phone): Something going wrong with delete from database")
+		return errorer
 	}
-	return err
+	return nil
 }
 
 // / Функция закрытия соединения с БД
 func (p *Psg) Close() {
 	p.conn.Close()
+}
+
+// / функция для проверки наличия номера телефона в БД
+func (p *Psg) CheckPhone(phone string) (bool, *pkg.Errorer) {
+	errorer := &pkg.Errorer{Where: "psg: func (p *Psg) CheckPhone(phone string) (bool, *pkg.Errorer)"}
+	query := "SELECT EXISTS (SELECT * FROM records WHERE phone = $1)"
+	var exists bool
+	err := p.conn.QueryRow(context.Background(), query, phone).Scan(&exists)
+	if err != nil {
+		errorer.Add("p.conn.QueryRow(context.Background(), query, phone).Scan(&exists): " + err.Error())
+		return false, errorer
+	}
+	return exists, nil
 }
