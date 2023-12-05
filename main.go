@@ -2,19 +2,25 @@ package main
 
 import (
 	// "fmt"
-	"httpserver/controller/stdhttp"
-	"httpserver/gates/psg"
-	"os"
-	// "httpserver/models/dto"
+	// "httpserver/controller/stdhttp"
+	// "httpserver/gates/psg"
+	// "os"
+	// "encoding/json"
+	"httpserver/models/dto"
 	// "httpserver/pkg"
 )
 
 func main() {
-	psgr := psg.NewPsg("localhost", os.Getenv("DB_PASSWORD"))
-	defer psgr.Close()
-	// print(psgr.CheckPhone("+1234567890"))
-	serv := stdhttp.NewController(":8080", psgr)
-	serv.Start()
+	resp := dto.Response{}
+	resp.Result = "ok"
+	// resp.Data = json.RawMessage{}
+	resp.Error = "cmdlmcl;ds"
+	resp.GetJson()
+	// psgr := psg.NewPsg("localhost", "postgres", os.Getenv("DB_PASSWORD"))
+	// defer psgr.Close()
+	// // print(psgr.CheckPhone("+1234567890"))
+	// serv := stdhttp.NewController(":8080", psgr)
+	// serv.Start()
 
 	// fmt.Println("All ride")
 

@@ -17,16 +17,16 @@ type Psg struct {
 }
 
 // NewPsg создает новый экземпляр Psg.
-func NewPsg(psgAddr string, dbPassword string) *Psg {
+func NewPsg(psgAddr string, dbUser string, dbPassword string) *Psg { //////////////// Возвращать ошибку или нет
 	psg := &Psg{}
 
-	if dbPassword == "" {
-		fmt.Println("Error: no password") ////////////////////////// 1
+	if dbPassword == "" || dbUser == "" || psgAddr == "" {
+		fmt.Println("Error: please write correct arguments") ////////////////////////// 1
 		return nil
 	}
 	db_url := &url.URL{
 		Scheme: "postgres",
-		User:   url.UserPassword("postgres", dbPassword),
+		User:   url.UserPassword(dbUser, dbPassword),
 		Host:   psgAddr + ":5432",
 		Path:   "records",
 	}
@@ -47,7 +47,7 @@ func (p *Psg) RecordCreate(record dto.Record) error {
 	// err := &pkg.Errorer{Where: "psg: func (p *Psg) RecordCreate(record dto.Record)"}
 	record_existence, err := p.CheckPhone(record.Phone)
 	if err != nil {
-		return myerr.Wrap(err, "")
+		return err //////////////////////////////////////////////////////////////////
 		// errorer.Add(erro.GetError())
 		// return errorer
 	}
@@ -193,12 +193,12 @@ func (p *Psg) RecordDeleteByPhone(phone string) error {
 	return nil
 }
 
-// / Функция закрытия соединения с БД
+// Функция закрытия соединения с БД
 func (p *Psg) Close() {
 	p.conn.Close()
 }
 
-// / функция для проверки наличия номера телефона в БД
+// функция для проверки наличия номера телефона в БД
 func (p *Psg) CheckPhone(phone string) (bool, error) {
 	myerr := pkg.NewMyError("func (p *Psg) CheckPhone(phone string) (bool, *pkg.Errorer)")
 	// errorer := &pkg.Errorer{Where: "psg: func (p *Psg) CheckPhone(phone string) (bool, *pkg.Errorer)"}
