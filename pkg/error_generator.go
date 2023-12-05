@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	// "strings"
 	"github.com/pkg/errors"
 )
 
@@ -10,8 +9,8 @@ type MyError struct {
 }
 
 func NewMyError(fn string) *MyError{
-	myerr := &MyError{funcName: fn}
-	return myerr
+	myErr := &MyError{funcName: fn}
+	return myErr
 
 }
 

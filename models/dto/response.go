@@ -2,7 +2,8 @@ package dto
 
 import (
 	"encoding/json"
-	"fmt"
+	"httpserver/pkg"
+	"log"
 )
 
 type Response struct {
@@ -11,13 +12,17 @@ type Response struct {
 	Error  string          `json:"error"`
 }
 
-func (resp *Response) GetJson() (byteResp []byte) {
+
+func (resp *Response) GetJson() (byteResp []byte, err error) {
+	myErr := pkg.NewMyError("package pkg: func GetJson()")
 	if resp.Data == nil {
 		resp.Data = json.RawMessage(`{}`)
 	}
-	byteResp, err := json.Marshal(resp)
+	byteResp, err = json.Marshal(resp)
 	if err != nil {
-		fmt.Println("Error in GetJson") //////////////////////////////////////
+		e := myErr.Wrap(err, "")
+		log.Println(e.Error())
+		return byteResp, e
 	}
-	return byteResp
+	return byteResp, nil
 }

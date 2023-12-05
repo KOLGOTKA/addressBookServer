@@ -2,7 +2,6 @@ package psg
 
 import (
 	"context"
-	"fmt"
 	"httpserver/models/dto"
 	"httpserver/pkg"
 	"log"
@@ -17,12 +16,11 @@ type Psg struct {
 }
 
 // NewPsg создает новый экземпляр Psg.
-func NewPsg(psgAddr string, dbUser string, dbPassword string) *Psg { //////////////// Возвращать ошибку или нет
+func NewPsg(psgAddr string, dbUser string, dbPassword string) *Psg {
 	psg := &Psg{}
 
 	if dbPassword == "" || dbUser == "" || psgAddr == "" {
-		fmt.Println("Error: please write correct arguments") ////////////////////////// 1
-		return nil
+		log.Fatal("Error: NewPsg(psgAddr string, dbUser string, dbPassword string): please write all arguments")
 	}
 	db_url := &url.URL{
 		Scheme: "postgres",
@@ -32,9 +30,8 @@ func NewPsg(psgAddr string, dbUser string, dbPassword string) *Psg { ///////////
 	}
 	connPool, err := pgxpool.New(context.Background(), db_url.String())
 
-	/// Так?
 	if err != nil {
-		log.Fatal(err, "Something going wrong with connecting to database") /////////////////////// 2
+		log.Fatal(err, "Something going wrong with connecting to database")
 	}
 	psg.conn = connPool
 	return psg
@@ -42,27 +39,22 @@ func NewPsg(psgAddr string, dbUser string, dbPassword string) *Psg { ///////////
 
 // RecordCreate добавляет новую запись в базу данных.
 func (p *Psg) RecordCreate(record dto.Record) error {
-	myerr := pkg.NewMyError("package pkg: func (p *Psg) RecordCreate(record dto.Record) error")
-	// err := pkg.NewMyError("package pkg: func (p *Psg) RecordCreate(record dto.Record) error")
-	// err := &pkg.Errorer{Where: "psg: func (p *Psg) RecordCreate(record dto.Record)"}
+	myErr := pkg.NewMyError("package pkg: func (p *Psg) RecordCreate(record dto.Record) error")
 	record_existence, err := p.CheckPhone(record.Phone)
 	if err != nil {
-		return err //////////////////////////////////////////////////////////////////
-		// errorer.Add(erro.GetError())
-		// return errorer
+		log.Println(myErr.Wrap(err, ""))
+		return myErr.Wrap(err, "")
 	}
 	if record_existence {
-		return myerr.Wrap(nil, "Phone already exist")
-		// errorer.Add("Phone already exist")
-		// return errorer
+		log.Println(myErr.Wrap(nil, "Phone already exist"))
+		return myErr.Wrap(nil, "Phone already exist")
 	}
 	_, err = p.conn.Exec(context.Background(), "INSERT INTO records (name, last_name, middle_name, address, phone) VALUES ($1, $2, $3, $4, $5)",
 		record.Name, record.LastName, record.MiddleName, record.Address, record.Phone)
 
 	if err != nil {
-		return myerr.Wrap(err, "Something going wrong with inserting into db")
-		// errorer.Add("p.conn.Exec(context.Background(), 'INSERT INTO records (name, last_name, middle_name, address, phone) VALUES ($1, $2, $3, $4, $5)', record.Name, record.LastName, record.MiddleName, record.Address, record.Phone): " + "Something going wrong with inserting into table 'records': " + err.Error())
-		// return errorer
+		log.Println(myErr.Wrap(err, "Something going wrong with inserting into db"))
+		return myErr.Wrap(err, "Something going wrong with inserting into db")
 	}
 
 	return nil
@@ -70,10 +62,8 @@ func (p *Psg) RecordCreate(record dto.Record) error {
 
 // RecordsGet возвращает записи из базы данных на основе предоставленных полей Record.
 func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, error) {
-	myerr := pkg.NewMyError("package psg: func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, *pkg.Errorer)")
-	// errorer := &pkg.Errorer{Where: "psg: func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, *pkg.Errorer)"}
+	myErr := pkg.NewMyError("package psg: func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, *pkg.Errorer)")
 	var result []dto.Record
-
 	var values []interface{}
 	query := "SELECT * FROM records WHERE TRUE"
 	// Будем добавлять параметры в запрос только если они не пустые
@@ -97,36 +87,29 @@ func (p *Psg) RecordsGet(record dto.Record) ([]dto.Record, error) {
 		query += " AND phone=$" + strconv.Itoa(len(values)+1)
 		values = append(values, record.Phone)
 	}
-	/// хорошим вариантом была бы text template lib
 
 	// Выполняем запрос с параметрами
 	rows, err := p.conn.Query(context.Background(), query, values...)
 
-	fmt.Println(query, values) ///////////////////////////////////////
-
 	if err != nil {
-		return nil, myerr.Wrap(err, "p.conn.Query(context.Background(), query, values...): Something going wrong with query to database")
-		// errorer.Add("p.conn.Query(context.Background(), query, values...): Something going wrong with query to database")
-		// return nil, errorer
+		log.Println(myErr.Wrap(err, "p.conn.Query(context.Background(), query, values...): Something going wrong with query to database"))
+		return nil, myErr.Wrap(err, "p.conn.Query(context.Background(), query, values...): Something going wrong with query to database")
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var rec dto.Record
 		if err := rows.Scan(&rec.ID, &rec.Name, &rec.LastName, &rec.MiddleName, &rec.Address, &rec.Phone); err != nil {
-			return nil, myerr.Wrap(err, "rows.Scan(&rec.ID, &rec.Name, &rec.LastName, &rec.MiddleName, &rec.Address, &rec.Phone): Something going wrong scan")
-			// errorer.Add("rows.Scan(&rec.ID, &rec.Name, &rec.LastName, &rec.MiddleName, &rec.Address, &rec.Phone): Something going wrong scan")
-			// return nil, errorer
+			log.Println(myErr.Wrap(err, "rows.Scan(&rec.ID, &rec.Name, &rec.LastName, &rec.MiddleName, &rec.Address, &rec.Phone): Something going wrong scan"))
+			return nil, myErr.Wrap(err, "rows.Scan(&rec.ID, &rec.Name, &rec.LastName, &rec.MiddleName, &rec.Address, &rec.Phone): Something going wrong scan")
 		}
 		result = append(result, rec)
-		fmt.Printf("ID: %d, Name: %s, Last Name: %s, Middle Name: %s, Address: %s, Phone: %s\n", rec.ID, rec.Name, rec.LastName, rec.MiddleName, rec.Address, rec.Phone)
 	}
 	return result, nil
 }
 
 // RecordUpdate обновляет существующую запись в базе данных по номеру телефона.
 func (p *Psg) RecordUpdate(record dto.Record) error {
-	myerr := pkg.NewMyError("package psg: func (p *Psg) RecordUpdate(record dto.Record)")
-	// errorer := &pkg.Errorer{Where: "psg: func (p *Psg) RecordUpdate(record dto.Record)"}
+	myErr := pkg.NewMyError("package psg: func (p *Psg) RecordUpdate(record dto.Record)")
 	/// должны обновляться не все поля, а только те, которые передаём
 	var values []interface{}
 	query := "UPDATE records SET"
@@ -157,38 +140,31 @@ func (p *Psg) RecordUpdate(record dto.Record) error {
 		values = append(values, record.Address)
 	}
 	if record.Phone == "" {
-		return myerr.Wrap(nil, "Empty phone number")
-		// errorer.Add("Empty phone number")
-		// return errorer
+		log.Println(myErr.Wrap(nil, "Empty phone number"))
+		return myErr.Wrap(nil, "Empty phone number")
 	}
 	if len(values) == 0 {
-		return myerr.Wrap(nil, "Nothing to update")
-		// errorer.Add("Nothing to update")
-		// return errorer
+		log.Println(myErr.Wrap(nil, "Nothing to update"))
+		return myErr.Wrap(nil, "Nothing to update")
 	}
 	query += " WHERE phone=$" + strconv.Itoa(len(values)+1)
 	values = append(values, record.Phone)
-	// query := "UPDATE records SET name=$1, last_name=$2, middle_name=$3, address=$4 WHERE phone=$5"
-	// _, err := p.conn.Exec(context.Background(), query, record.Name, record.LastName, record.MiddleName, record.Address, record.Phone)
 	_, err := p.conn.Exec(context.Background(), query, values...)
 	if err != nil {
-		return myerr.Wrap(err, "p.conn.Exec(context.Background(), query, values...): Something going wrong with query to database")
-		// errorer.Add("p.conn.Exec(context.Background(), query, values...): Something going wrong with query to database")
-		// return errorer
+		log.Println(err, "p.conn.Exec(context.Background(), query, values...): Something going wrong with query to database")
+		return myErr.Wrap(err, "p.conn.Exec(context.Background(), query, values...): Something going wrong with query to database")
 	}
 	return nil
 }
 
 // RecordDeleteByPhone удаляет запись из базы данных по номеру телефона.
 func (p *Psg) RecordDeleteByPhone(phone string) error {
-	myerr := pkg.NewMyError("package psg: func (p *Psg) RecordDeleteByPhone(phone string)")
-	// errorer := &pkg.Errorer{Where: "psg: func (p *Psg) RecordDeleteByPhone(phone string)"}
+	myErr := pkg.NewMyError("package psg: func (p *Psg) RecordDeleteByPhone(phone string)")
 	query := "DELETE FROM records WHERE phone=$1"
 	_, err := p.conn.Exec(context.Background(), query, phone)
 	if err != nil {
-		return myerr.Wrap(err, "p.conn.Exec(context.Background(), query, phone): Something going wrong with delete from database")
-		// errorer.Add("p.conn.Exec(context.Background(), query, phone): Something going wrong with delete from database")
-		// return errorer
+		log.Println(err, "p.conn.Exec(context.Background(), query, phone): Something going wrong with delete from database")
+		return myErr.Wrap(err, "p.conn.Exec(context.Background(), query, phone): Something going wrong with delete from database")
 	}
 	return nil
 }
@@ -200,15 +176,13 @@ func (p *Psg) Close() {
 
 // функция для проверки наличия номера телефона в БД
 func (p *Psg) CheckPhone(phone string) (bool, error) {
-	myerr := pkg.NewMyError("func (p *Psg) CheckPhone(phone string) (bool, *pkg.Errorer)")
-	// errorer := &pkg.Errorer{Where: "psg: func (p *Psg) CheckPhone(phone string) (bool, *pkg.Errorer)"}
+	myErr := pkg.NewMyError("func (p *Psg) CheckPhone(phone string) (bool, *pkg.Errorer)")
 	query := "SELECT EXISTS (SELECT * FROM records WHERE phone = $1)"
 	var exists bool
 	err := p.conn.QueryRow(context.Background(), query, phone).Scan(&exists)
 	if err != nil {
-		return false, myerr.Wrap(err, "p.conn.QueryRow(context.Background(), query, phone).Scan(&exists)")
-		// errorer.Add("p.conn.QueryRow(context.Background(), query, phone).Scan(&exists): " + err.Error())
-		// return false, errorer
+		log.Println(myErr.Wrap(err, "p.conn.QueryRow(context.Background(), query, phone).Scan(&exists)"))
+		return false, myErr.Wrap(err, "p.conn.QueryRow(context.Background(), query, phone).Scan(&exists)")
 	}
 	return exists, nil
 }
