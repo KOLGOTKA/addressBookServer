@@ -78,10 +78,11 @@ func (hs *Controller) RecordCreateHandler(w http.ResponseWriter, req *http.Reque
 		e := myErr.Wrap(err, "GetBody(req)")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
@@ -92,10 +93,11 @@ func (hs *Controller) RecordCreateHandler(w http.ResponseWriter, req *http.Reque
 		e := myErr.Wrap(nil, "All fields except for the middlename must be filled in")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
@@ -107,10 +109,11 @@ func (hs *Controller) RecordCreateHandler(w http.ResponseWriter, req *http.Reque
 		e := myErr.Wrap(err, "pkg.PhoneNormalize(record.Phone)")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
@@ -121,20 +124,22 @@ func (hs *Controller) RecordCreateHandler(w http.ResponseWriter, req *http.Reque
 		e := myErr.Wrap(err, "")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
 		return
 	}
 	response.Result = "Success"
-	js, e := response.GetJson()
+	js, err := response.GetJson()
 	if err != nil {
-		log.Println(e.Error())
-		w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		log.Println(err.Error())
+		w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + err.Error() + `"}`))
+		return
 	}
 	w.Write(js)
 }
@@ -149,10 +154,11 @@ func (hs *Controller) RecordGetHandler(w http.ResponseWriter, req *http.Request)
 		e := myErr.Wrap(err, "GetBody(req)")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
@@ -164,10 +170,11 @@ func (hs *Controller) RecordGetHandler(w http.ResponseWriter, req *http.Request)
 			e := myErr.Wrap(err, "pkg.PhoneNormalize(record.Phone)")
 			response.Result = "Error"
 			response.Error = e.Error()
-			js, e := response.GetJson()
-			if err != nil {
-				log.Println(e.Error())
-				w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+			js, erro := response.GetJson()
+			if erro != nil {
+				log.Println(erro.Error())
+				w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+				return
 			}
 			w.Write(js)
 			log.Println(e.Error())
@@ -180,10 +187,11 @@ func (hs *Controller) RecordGetHandler(w http.ResponseWriter, req *http.Request)
 		e := myErr.Wrap(err, "")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
@@ -197,10 +205,11 @@ func (hs *Controller) RecordGetHandler(w http.ResponseWriter, req *http.Request)
 		e := myErr.Wrap(err, "json.Marshal(records)")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
@@ -208,10 +217,11 @@ func (hs *Controller) RecordGetHandler(w http.ResponseWriter, req *http.Request)
 	}
 	response.Result = "Success"
 	response.Data = jsonData
-	js, e := response.GetJson()
+	js, err := response.GetJson()
 	if err != nil {
-		log.Println(e.Error())
-		w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		log.Println(err.Error())
+		w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + err.Error() + `"}`))
+		return
 	}
 	w.Write(js)
 }
@@ -226,24 +236,27 @@ func (hs *Controller) RecordUpdateHandler(w http.ResponseWriter, req *http.Reque
 		e := myErr.Wrap(err, "GetBody(req)")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
 		return
 	}
+
 	record.Phone, err = pkg.PhoneNormalize(record.Phone)
 	if err != nil {
 		e := myErr.Wrap(err, "pkg.PhoneNormalize(record.Phone)")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
@@ -254,20 +267,22 @@ func (hs *Controller) RecordUpdateHandler(w http.ResponseWriter, req *http.Reque
 		e := myErr.Wrap(err, "")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
 		return
 	}
 	response.Result = "Success"
-	js, e := response.GetJson()
+	js, err := response.GetJson()
 	if err != nil {
-		log.Println(e.Error())
-		w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		log.Println(err.Error())
+		w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + err.Error() + `"}`))
+		return
 	}
 	w.Write(js)
 }
@@ -283,10 +298,11 @@ func (hs *Controller) RecordDeleteByPhoneHandler(w http.ResponseWriter, req *htt
 		e := myErr.Wrap(err, "io.ReadAll(req.Body)")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
@@ -297,10 +313,11 @@ func (hs *Controller) RecordDeleteByPhoneHandler(w http.ResponseWriter, req *htt
 		e := myErr.Wrap(err, "pkg.PhoneNormalize(string(byteReq))")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
@@ -311,20 +328,22 @@ func (hs *Controller) RecordDeleteByPhoneHandler(w http.ResponseWriter, req *htt
 		e := myErr.Wrap(err, "")
 		response.Result = "Error"
 		response.Error = e.Error()
-		js, e := response.GetJson()
-		if err != nil {
-			log.Println(e.Error())
-			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		js, erro := response.GetJson()
+		if erro != nil {
+			log.Println(erro.Error())
+			w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + erro.Error() + `"}`))
+			return
 		}
 		w.Write(js)
 		log.Println(e.Error())
 		return
 	}
 	response.Result = "Success"
-	js, e := response.GetJson()
+	js, err := response.GetJson()
 	if err != nil {
-		log.Println(e.Error())
-		w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + e.Error() + `"}`))
+		log.Println(err.Error())
+		w.Write(json.RawMessage(`{"result":"Error","data":{},"error":"` + err.Error() + `"}`))
+		return
 	}
 	w.Write(js)
 }

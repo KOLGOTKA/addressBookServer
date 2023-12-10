@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/url"
 	"strconv"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

@@ -7,8 +7,6 @@ require (
 	github.com/pkg/errors v0.9.1
 )
 
-require github.com/gorilla/mux v1.8.1 // indirect
-
 require (
 	// github.com/dongri/phonenumber v0.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
