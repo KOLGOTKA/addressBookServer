@@ -88,8 +88,8 @@ func (hs *Controller) RecordCreateHandler(w http.ResponseWriter, req *http.Reque
 		return
 	}
 	/// Проверяем нет ли пустых значений
-	if record.Address == "" || record.MiddleName == "" || record.Name == "" || record.Phone == "" {
-		e := myErr.Wrap(nil, "All fields except for the lastname must be filled in")
+	if record.Address == "" || record.LastName == "" || record.Name == "" || record.Phone == "" {
+		e := myErr.Wrap(nil, "All fields except for the middlename must be filled in")
 		response.Result = "Error"
 		response.Error = e.Error()
 		js, e := response.GetJson()
