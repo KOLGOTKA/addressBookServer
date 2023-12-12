@@ -202,7 +202,7 @@ func (hs *Controller) RecordGetHandler(w http.ResponseWriter, req *http.Request)
 	w.Header().Set("Content-Type", "application/json")
 	jsonData, err := json.Marshal(result)
 	if err != nil {
-		e := myErr.Wrap(err, "json.Marshal(records)")
+		e := myErr.Wrap(err, "json.Marshal(result)")
 		response.Result = "Error"
 		response.Error = e.Error()
 		js, erro := response.GetJson()
